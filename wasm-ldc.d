@@ -40,8 +40,10 @@ void main(string[] args) {
 	}
 	if (exitSoon)
 		return;
+	bool excludeGlueJs = false;
 	string outputName = "";
 	bool noOutputName = true;
+	string glueOutput = "";
 	string ldc2 = rootDir.chainPath("build-ldc/bin/ldc2").to!string;
 	bool release = false;
 	string[] linkOpts = [
@@ -67,6 +69,12 @@ void main(string[] args) {
 			if (outputName.length >= 5 && outputName[$ - 5 .. $] == ".wasm") {
 				outputName = outputName[0 .. $ - 5];
 			}
+		}
+		else if (arg == "--no-glue") {
+			excludeGlueJs = true;
+		}
+		else if (arg.length > 14 && arg[0 .. 14] == "--glue-output=") {
+			glueOutput = arg[14 .. $];
 		}
 		else {
 			if (arg == "-v") {
@@ -121,5 +129,11 @@ void main(string[] args) {
 	if (release) {
 		run("wasm-opt", ["wasm-opt", outputName ~ ".wasm",
 			"--vacuum", "--dce", "-o", outputName ~ ".wasm"]);
+	}
+	if (!excludeGlueJs) {
+		if (glueOutput == "") {
+			glueOutput = outputName.dirName.chainPath("glue.min.js").to!string;
+		}
+		copy(thisExePath.dirName.chainPath("glue.min.js").to!string, glueOutput);
 	}
 }
