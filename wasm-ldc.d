@@ -135,7 +135,7 @@ void main(string[] args) {
 	}
 	if (!excludeGlueJs) {
 		if (glueOutput == "") {
-			assert(asRelativePath(outputName.dirName, thisExePath.dirName).to!string != ".");
+			assert(asRelativePath(outputName.asAbsolutePath.dirName, thisExePath.dirName).to!string != ".");
 			glueOutput = outputName.dirName.chainPath("glue.js").to!string;
 		}
 		copy(thisExePath.dirName.chainPath(release ? "glue.min.js" : "glue.js").to!string, glueOutput);
