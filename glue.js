@@ -287,6 +287,9 @@ class ExitError extends Error {
 		/** @type {WebAssembly.Memory} */
 		let memory;
 
+		/** @type {WebAssembly.Exports} */
+		let exports;
+
 		const MEMORY = {
 			read(ptr, len) {
 				return new Uint8Array(memory.buffer, ptr, len);
@@ -366,7 +369,8 @@ class ExitError extends Error {
 		let debugFile = "unknown", debugLine = 0;
 
 		function processError(e) {
-			throw new Error(`${debugFile}:${debugLine}: ${e.message}`);
+			console.error(`${debugFile}:${debugLine}:`);
+			throw e;
 		}
 
 		const glue = {
@@ -385,6 +389,10 @@ class ExitError extends Error {
 					processError(new Error("var is not a bool"));
 				}
 			},
+			castBool: function(slot) {
+				const data = vars.get(slot);
+				return data ? 1 : 0;
+			},
 			getDouble: function(slot) {
 				const data = vars.get(slot);
 				if (typeof data === "number") {
@@ -399,6 +407,20 @@ class ExitError extends Error {
 			},
 			setBuffer: function(slot, ptr, len) {
 				vars.set(slot, MEMORY.read(ptr, len));
+			},
+			setDelegate: function(slot, value) {
+				const func = function(...args) {
+					const startSlot = exports.reserveSlots(args.length + 1);
+					for (let i = 0; i < args.length; ++i) {
+						vars.set(startSlot + 1, args[i]);
+					}
+					exports.callDelegate(value, startSlot, args.length);
+					const result = vars.get(startSlot);
+					vars.delete(startSlot);
+					return result;
+				};
+				// FIXME: when the function gets GCed on the JS side, we somehow need to communicate that using deleteDelegate
+				vars.set(slot, func);
 			},
 			setGlobal: function(slot) {
 				vars.set(slot, window || self);
@@ -497,7 +519,7 @@ class ExitError extends Error {
 					const base = vars.get(slot);
 					const value = base[member];
 					if (isReallyFunction(value, args) || args.length > 1) {
-						vars.set(slot, value(...args));
+						vars.set(slot, base[member](...args));
 					}
 					else if (args.length === 0) {
 						vars.set(slot, value);
@@ -608,10 +630,11 @@ class ExitError extends Error {
 		const bytes = await fetch(filename).then(x => x.arrayBuffer());
 		const source = await WebAssembly.instantiate(bytes, LIB);
 
-		memory = source.instance.exports.memory;
+		exports = source.instance.exports;
+		memory = exports.memory;
 
 		try {
-			source.instance.exports["_start"]();
+			exports["_start"]();
 		}
 		catch (e) {
 			stdout.flush();

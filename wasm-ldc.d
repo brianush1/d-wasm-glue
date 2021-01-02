@@ -49,6 +49,9 @@ void main(string[] args) {
 	string[] linkOpts = [
 		rootDir.chainPath("wasi-libc/sysroot/lib/wasm32-wasi/libc.a").to!string,
 		"-allow-undefined",
+		"--export=reserveSlots",
+		"--export=callDelegate",
+		"--export=deleteDelegate",
 	];
 	string[] compilerOpts = [
 		"-fvisibility=hidden",
@@ -132,8 +135,9 @@ void main(string[] args) {
 	}
 	if (!excludeGlueJs) {
 		if (glueOutput == "") {
-			glueOutput = outputName.dirName.chainPath("glue.min.js").to!string;
+			assert(asRelativePath(outputName.dirName, thisExePath.dirName).to!string != ".");
+			glueOutput = outputName.dirName.chainPath("glue.js").to!string;
 		}
-		copy(thisExePath.dirName.chainPath("glue.min.js").to!string, glueOutput);
+		copy(thisExePath.dirName.chainPath(release ? "glue.min.js" : "glue.js").to!string, glueOutput);
 	}
 }
