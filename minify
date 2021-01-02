@@ -1,0 +1,3 @@
+#!/bin/sh
+
+uglifyjs glue.js --screw-ie8 -m -o glue.min.js
