@@ -92,7 +92,7 @@ private struct GCed(T) {
 
 alias var = GCed!VarImpl;
 
-private void ddebugInfo(string file, size_t line)() {
+private void ddebugInfo(string file, size_t line) {
 	debug {
 		debugInfo(file.ptr, file.length, line);
 	}
@@ -227,7 +227,7 @@ public:
 	}
 
 	inout(var) opIndex(T, string file = __FILE__, size_t line = __LINE__)(T key) inout {
-		ddebugInfo!(file, line);
+		ddebugInfo(file, line);
 		var result = clone;
 		var keyv = var(key);
 		getIndex(result.slot, keyv.slot);
@@ -235,7 +235,7 @@ public:
 	}
 
 	var opIndexAssign(T, K, string file = __FILE__, size_t line = __LINE__)(T value, K key) {
-		ddebugInfo!(file, line);
+		ddebugInfo(file, line);
 		var keyv = key;
 		var valuev = value;
 		setIndex(slot, valuev.slot, keyv.slot);
@@ -243,7 +243,7 @@ public:
 	}
 
 	var opCall(string file = __FILE__, size_t line = __LINE__, Args...)(Args args) const {
-		ddebugInfo!(file, line);
+		ddebugInfo(file, line);
 		var[Args.length] argsv;
 		int[Args.length] argsi;
 		foreach (i, arg; args) {
@@ -256,7 +256,7 @@ public:
 	}
 
 	var New(string file = __FILE__, size_t line = __LINE__, Args...)(Args args) const { // @suppress(dscanner.style.phobos_naming_convention)
-		ddebugInfo!(file, line);
+		ddebugInfo(file, line);
 		var[Args.length] argsv;
 		int[Args.length] argsi;
 		foreach (i, arg; args) {
@@ -271,7 +271,7 @@ public:
 	template opDispatch(string member) {
 		static assert(member != "opEquals");
 		var opDispatch(string file = __FILE__, size_t line = __LINE__, Args...)(Args args) {
-			ddebugInfo!(file, line);
+			ddebugInfo(file, line);
 			var[Args.length] argsv;
 			int[Args.length] argsi;
 			foreach (i, arg; args) {
@@ -304,7 +304,7 @@ public:
 			static assert(0);
 		}
 
-		ddebugInfo!(file, line);
+		ddebugInfo(file, line);
 
 		static if (is(Unqual!V == void) || is(Unqual!V == ubyte)) {
 			size_t len = getBufferLength(slot);
@@ -331,12 +331,12 @@ public:
 	}
 
 	T get(T, string file = __FILE__, size_t line = __LINE__)() inout if (is(Unqual!T == bool)) {
-		ddebugInfo!(file, line);
+		ddebugInfo(file, line);
 		return cast(T) getBool(slot);
 	}
 
 	T get(T, string file = __FILE__, size_t line = __LINE__)() inout if (isNumeric!T) {
-		ddebugInfo!(file, line);
+		ddebugInfo(file, line);
 		return cast(T) getDouble(slot);
 	}
 
