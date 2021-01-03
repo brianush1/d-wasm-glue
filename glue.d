@@ -71,7 +71,7 @@ static this() {
 
 private struct GCed(T) {
 	private T* t_;
-	private static T constUninit;
+	private static const(T) constUninit;
 
 	this(Args...)(Args args) {
 		t_ = new T(args);
@@ -341,7 +341,10 @@ public:
 	}
 
 	T get(T)() inout if (is(Unqual!T == var)) {
-		return cast(T) this;
+		var result;
+		result.slot = nextSlot;
+		copy(result.slot, slot);
+		return cast(T) result;
 	}
 
 	bool toBool() {

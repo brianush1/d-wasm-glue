@@ -412,7 +412,7 @@ class ExitError extends Error {
 				const func = function(...args) {
 					const startSlot = exports.reserveSlots(args.length + 1);
 					for (let i = 0; i < args.length; ++i) {
-						vars.set(startSlot + 1, args[i]);
+						vars.set(startSlot + 1 + i, args[i]);
 					}
 					exports.callDelegate(value, startSlot, args.length);
 					const result = vars.get(startSlot);
@@ -555,7 +555,7 @@ class ExitError extends Error {
 				case WASI_CLOCK_MONOTONIC:
 				case WASI_CLOCK_PROCESS_CPUTIME_ID:
 				case WASI_CLOCK_THREAD_CPUTIME_ID:
-					MEMORY.setUint64(resolution, BigInt(1));
+					MEMORY.setUint64(resolution, BigInt(1000000000));
 					return WASI_ESUCCESS;
 				default:
 					return WASI_EINVAL;
